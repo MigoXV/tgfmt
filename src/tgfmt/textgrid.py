@@ -31,8 +31,8 @@ from __future__ import print_function
 
 import re
 import codecs
-import os.path
 import logging
+from pathlib import Path
 
 from sys import stderr
 from bisect import bisect_left
@@ -901,8 +901,7 @@ class MLF(object):
         The number of TextGrids is returned.
         """
         for grid in self.grids:
-            (junk, tail) = os.path.split(grid.name)
-            (root, junk) = os.path.splitext(tail)
-            my_path = os.path.join(prefix, root + '.TextGrid')
+            root = Path(grid.name).stem
+            my_path = Path(prefix) / f'{root}.TextGrid'
             grid.write(codecs.open(my_path, 'w', 'UTF-8'))
         return len(self.grids)
