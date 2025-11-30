@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "tgfmt"
+version = "1.6.0"
+description = "Praat TextGrid manipulation."
+authors = ["Kyle Gorman <kylebgorman@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "tgfmt", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
