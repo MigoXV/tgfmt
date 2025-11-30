@@ -1,5 +1,5 @@
-textgrid.py
-===========
+tgfmt
+=====
 
 Python classes for Praat TextGrid and TextTier files (and HTK .mlf files)
 
@@ -8,34 +8,38 @@ Kyle Gorman <kylebgorman@gmail.com> and contributors (see commit history).
 How to cite:
 ------------
 
-While you don't have to, if you want to cite textgrid.py in a publication, include a footnote link to the source:
+While you don't have to, if you want to cite tgfmt in a publication, include a footnote link to the source:
 
     http://github.com/kylebgorman/textgrid/
 
 How to install:
 ---------------
 
-The code can be placed in your working directory or in your `$PYTHONPATH`,  and then imported in your Python script. You also can install it via `pip`, like so:
+With Poetry installed, you can add tgfmt to your environment using:
 
-    pip install textgrid
+    poetry add tgfmt
+
+or install directly with pip:
+
+    pip install tgfmt
 
 (if you're not working in a virtualenv, you may need to do this with `sudo`.)
 
 Synopsis:
 ---------
 
-See the docstrings in `textgrid.py`
+See the docstrings in `tgfmt/textgrid.py`.
 
 Example:
 ---------
 
-This is a simple example of reading a TextGrid file. 
+This is a simple example of reading a TextGrid file.
 
 ```python
-import textgrid
+import tgfmt
 
 # Read a TextGrid object from a file.
-tg = textgrid.TextGrid.fromFile('test.TextGrid')
+tg = tgfmt.TextGrid.fromFile('test.TextGrid')
 
 # Read a IntervalTier object.
 print("------- IntervalTier Example -------")

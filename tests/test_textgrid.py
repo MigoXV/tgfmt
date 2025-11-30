@@ -6,16 +6,18 @@
 # Kyle Gorman <kgorman@ling.upenn.edu>
 # Morgan Sonderegger <morgan@cs.uchicago.edu>
 #
-# Tests for the read-write functions in textgrid.py (they don't make much
+# Tests for the read-write functions in tgfmt.py (they don't make much
 # sense as doctests). not particularly useful for users...
 
 from __future__ import unicode_literals
 
-import textgrid
+import os
+import tgfmt
 import unittest
 
 from io import StringIO
 from os import remove
+from pathlib import Path
 
 tg_with_quotes = '''File type = "ooTextFile"
 Object class = "TextGrid"
@@ -170,7 +172,7 @@ class TestDoubleQuotes(unittest.TestCase):
         with open('test_double_quotes.TextGrid', 'w') as tg_file:
             tg_file.write(tg_with_quotes)
 
-        cls.tg = textgrid.TextGrid.fromFile('test_double_quotes.TextGrid')
+        cls.tg = tgfmt.TextGrid.fromFile('test_double_quotes.TextGrid')
 
         cls.tg.write('test_double_quotes_tg.TextGrid')
         cls.tg[0].write('test_double_quotes_it.IntervalTier')
@@ -207,7 +209,7 @@ class TestDoubleQuotes(unittest.TestCase):
             self.assertIn(mark, tg_string)
 
     def test_read_it_double_quotes(self):
-        it = textgrid.IntervalTier.fromFile('test_double_quotes_it.IntervalTier')
+        it = tgfmt.IntervalTier.fromFile('test_double_quotes_it.IntervalTier')
 
         for n, mark in enumerate(self.interval_marks):
             self.assertEqual(it[n].mark, mark)
@@ -220,7 +222,7 @@ class TestDoubleQuotes(unittest.TestCase):
             self.assertIn(mark, it_string)
 
     def test_read_pt_double_quotes(self):
-        pt = textgrid.PointTier.fromFile('test_double_quotes_pt.PointTier')
+        pt = tgfmt.PointTier.fromFile('test_double_quotes_pt.PointTier')
 
         for n, mark in enumerate(self.point_marks):
             self.assertEqual(pt[n].mark, mark)
@@ -249,17 +251,17 @@ class TestRoundTrip(unittest.TestCase):
     def test_roundtrip(self):
         ## MLF
         # read it in, writing over mlf
-        mlf = textgrid.MLF('baz.mlf')
+        mlf = tgfmt.MLF('baz.mlf')
         # write them to foo.TextGrid and bar.TextGrid
         mlf.write()
 
         ## TextGrid
         # read foo.TextGrid
-        foo = textgrid.TextGrid.fromFile('foo.TextGrid')
+        foo = tgfmt.TextGrid.fromFile('foo.TextGrid')
         # write it out
         foo.write('foo_copy.TextGrid')
         # read it back in
-        foo_copy = textgrid.TextGrid.fromFile('foo_copy.TextGrid')
+        foo_copy = tgfmt.TextGrid.fromFile('foo_copy.TextGrid')
 
         self.assertEqual(repr(foo), repr(foo_copy))
 
@@ -268,7 +270,7 @@ class TestRoundTrip(unittest.TestCase):
         # write it out
         phones.write('phones.IntervalTier')
         # read it back in
-        phones_copy = textgrid.IntervalTier.fromFile('phones.IntervalTier', 'phones')
+        phones_copy = tgfmt.IntervalTier.fromFile('phones.IntervalTier', 'phones')
 
         self.assertEqual(repr(phones), repr(phones_copy))
 
@@ -284,7 +286,7 @@ This latter line shouldn't be pulled in at all.
 
         source = StringIO(some_text)
 
-        self.assertEqual(textgrid.textgrid._getMark(source, False), """This is an annoying, but
+        self.assertEqual(tgfmt.textgrid._getMark(source, False), """This is an annoying, but
 not technically ill-formed
 line.""")
 
@@ -296,7 +298,7 @@ This latter line shouldn't be pulled in at all.
 '''
         source = StringIO(multiline_text_with_quotes)
     
-        self.assertEqual(textgrid.textgrid._getMark(source, False), """This is an "annoying", "but"
+        self.assertEqual(tgfmt.textgrid._getMark(source, False), """This is an "annoying", "but"
 not "technically" ill-formed
 line.""")
 
@@ -305,13 +307,13 @@ class TestPointComparison(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.foo = textgrid.textgrid.Point(3.0, 'foo')
-        cls.bar = textgrid.textgrid.Point(4.0, 'bar')
-        cls.baz = textgrid.textgrid.Interval(3.0, 5.0, 'baz')
+        cls.foo = tgfmt.Point(3.0, 'foo')
+        cls.bar = tgfmt.Point(4.0, 'bar')
+        cls.baz = tgfmt.Interval(3.0, 5.0, 'baz')
 
     def test_point_point(self):
         self.assertLess(self.foo, self.bar)
-        self.assertEqual(self.foo, textgrid.textgrid.Point(3.0, 'baz'))
+        self.assertEqual(self.foo, tgfmt.Point(3.0, 'baz'))
         self.assertGreater(self.bar, self.foo)
 
     def test_point_value(self):
@@ -329,9 +331,9 @@ class TestIntervalComparison(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.foo = textgrid.textgrid.Point(3.0, 'foo')
-        cls.bar = textgrid.textgrid.Point(4.0, 'bar')
-        cls.baz = textgrid.textgrid.Interval(3.0, 5.0, 'baz')
+        cls.foo = tgfmt.Point(3.0, 'foo')
+        cls.bar = tgfmt.Point(4.0, 'bar')
+        cls.baz = tgfmt.Interval(3.0, 5.0, 'baz')
 
     def test_point_in_interval(self):
         self.assertIn(self.foo, self.baz)
@@ -346,14 +348,14 @@ class TestPointTierComparison(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        foo_point = textgrid.textgrid.Point(3.0, 'foo')
-        bar_point = textgrid.textgrid.Point(4.0, 'bar')
-        baz_interval = textgrid.textgrid.Interval(3.0, 5.0, 'baz')
+        foo_point = tgfmt.Point(3.0, 'foo')
+        bar_point = tgfmt.Point(4.0, 'bar')
+        baz_interval = tgfmt.Interval(3.0, 5.0, 'baz')
 
-        cls.foo = textgrid.textgrid.PointTier()
-        cls.bar = textgrid.textgrid.PointTier()
-        cls.bam = textgrid.textgrid.PointTier()
-        cls.baz = textgrid.textgrid.IntervalTier()
+        cls.foo = tgfmt.PointTier()
+        cls.bar = tgfmt.PointTier()
+        cls.bam = tgfmt.PointTier()
+        cls.baz = tgfmt.IntervalTier()
 
         cls.foo.addPoint(foo_point)
         cls.bar.addPoint(bar_point)
@@ -374,14 +376,14 @@ class TestIntervalTierComparison(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        foo_point = textgrid.textgrid.Point(3.0, 'foo')
-        baz_interval = textgrid.textgrid.Interval(3.0, 5.0, 'baz')
-        bat_interval = textgrid.textgrid.Interval(5.0, 6.0, 'bar')
+        foo_point = tgfmt.Point(3.0, 'foo')
+        baz_interval = tgfmt.Interval(3.0, 5.0, 'baz')
+        bat_interval = tgfmt.Interval(5.0, 6.0, 'bar')
 
-        cls.foo = textgrid.textgrid.PointTier()
-        cls.bar = textgrid.textgrid.IntervalTier()
-        cls.baz = textgrid.textgrid.IntervalTier()
-        cls.bat = textgrid.textgrid.IntervalTier()
+        cls.foo = tgfmt.PointTier()
+        cls.bar = tgfmt.IntervalTier()
+        cls.baz = tgfmt.IntervalTier()
+        cls.bat = tgfmt.IntervalTier()
 
         cls.foo.addPoint(foo_point)
         cls.bar.addInterval(baz_interval)
@@ -402,24 +404,24 @@ class TestTextGridComparison(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        foo_point = textgrid.textgrid.Point(3.0, 'foo')
-        bar_interval = textgrid.textgrid.Interval(3.0, 5.0, 'bar')
-        baz_interval = textgrid.textgrid.Interval(5.0, 6.0, 'baz')
+        foo_point = tgfmt.Point(3.0, 'foo')
+        bar_interval = tgfmt.Interval(3.0, 5.0, 'bar')
+        baz_interval = tgfmt.Interval(5.0, 6.0, 'baz')
 
-        cls.foo_tier = textgrid.textgrid.PointTier()
-        bar_tier = textgrid.textgrid.IntervalTier()
-        baz_tier = textgrid.textgrid.IntervalTier()
-        bat_tier = textgrid.textgrid.IntervalTier()
+        cls.foo_tier = tgfmt.PointTier()
+        bar_tier = tgfmt.IntervalTier()
+        baz_tier = tgfmt.IntervalTier()
+        bat_tier = tgfmt.IntervalTier()
 
         cls.foo_tier.addPoint(foo_point)
         bar_tier.addInterval(bar_interval)
         baz_tier.addInterval(baz_interval)
         bat_tier.addInterval(baz_interval)
 
-        cls.foo_grid = textgrid.textgrid.TextGrid()
-        cls.bar_grid = textgrid.textgrid.TextGrid()
-        cls.baz_grid = textgrid.textgrid.TextGrid()
-        cls.bat_grid = textgrid.textgrid.TextGrid()
+        cls.foo_grid = tgfmt.TextGrid()
+        cls.bar_grid = tgfmt.TextGrid()
+        cls.baz_grid = tgfmt.TextGrid()
+        cls.bat_grid = tgfmt.TextGrid()
 
         cls.foo_grid.append(cls.foo_tier)
         cls.bar_grid.append(bar_tier)
@@ -442,7 +444,7 @@ class TestTextGridComparison(unittest.TestCase):
 class TestPointTier(unittest.TestCase):
 
     def setUp(self):
-        self.foo = textgrid.textgrid.PointTier('foo')
+        self.foo = tgfmt.PointTier('foo')
     
     def test_add(self):
         self.foo.add(4.0, 'bar')
@@ -462,7 +464,7 @@ class TestPointTier(unittest.TestCase):
 class TestIntervalTier(unittest.TestCase):
 
     def setUp(self):
-        self.foo = textgrid.textgrid.IntervalTier('foo')
+        self.foo = tgfmt.IntervalTier('foo')
         
     def test_add(self):
         self.foo.add(0.0, 2.0, 'bar')
@@ -500,13 +502,13 @@ class TestIntervalTier(unittest.TestCase):
         self.assertEqual(repr(self.foo.intervalContaining(0.5)), 'Interval(0.0, 1.0, bar)')
 
     def test_add_too_late(self):
-        foo = textgrid.textgrid.IntervalTier('foo', maxTime=3.5)
+        foo = tgfmt.IntervalTier('foo', maxTime=3.5)
         
         with self.assertRaisesRegex(ValueError, '3.5'):
             foo.add(2.7, 3.7, 'bar')
     
     def test_fill_in_the_gaps(self):
-        foo = textgrid.textgrid.IntervalTier('foo', maxTime=3.5)
+        foo = tgfmt.IntervalTier('foo', maxTime=3.5)
         foo.add(1.3, 2.4, 'bar')
         foo.add(2.7, 3.3, 'baz')
         
@@ -521,13 +523,13 @@ class TestTextGrid(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.foo = textgrid.textgrid.TextGrid('foo')
+        cls.foo = tgfmt.TextGrid('foo')
 
-        cls.bar = textgrid.textgrid.PointTier('bar')
+        cls.bar = tgfmt.PointTier('bar')
         cls.bar.add(1.0, 'spam')
         cls.bar.add(2.75, 'eggs')
 
-        cls.baz = textgrid.textgrid.IntervalTier('baz')
+        cls.baz = tgfmt.IntervalTier('baz')
         cls.baz.add(0.0, 2.5, 'spam')
         cls.baz.add(2.5, 3.5, 'eggs')
 
@@ -551,13 +553,12 @@ class TestTextGrid(unittest.TestCase):
 class TestReadTextGrid(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import os
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        cls.short_textgrid_path = os.path.join(base_dir, 'tests', 'data', 'short_format.TextGrid')
-        cls.long_textgrid_path = os.path.join(base_dir, 'tests', 'data', 'long_format.TextGrid')
+        base_dir = Path(__file__).resolve().parent
+        cls.short_textgrid_path = base_dir / 'data' / 'short_format.TextGrid'
+        cls.long_textgrid_path = base_dir / 'data' / 'long_format.TextGrid'
 
     def test_read_short(self):
-        tg = textgrid.TextGrid()
+        tg = tgfmt.TextGrid()
         tg.read(self.short_textgrid_path)
         assert tg.tiers[0].name == 'phone'
         assert tg.tiers[1].name == 'word'
@@ -566,7 +567,7 @@ class TestReadTextGrid(unittest.TestCase):
         assert abs(tg.tiers[0][0].maxTime - 1361.8925) < 0.01
 
     def test_read_long(self):
-        tg = textgrid.TextGrid()
+        tg = tgfmt.TextGrid()
         tg.read(self.long_textgrid_path)
         assert tg.tiers[0].name == 'phone'
         assert tg.tiers[1].name == 'word'
