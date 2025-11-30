@@ -39,6 +39,12 @@ from bisect import bisect_left
 
 from .exceptions import TextGridError
 
+
+def cmp(left, right):
+    """Return negative if left < right, zero if equal, positive if left > right."""
+
+    return (left > right) - (left < right)
+
 DEFAULT_TEXTGRID_PRECISION = 5
 DEFAULT_MLF_PRECISION = 5
 
