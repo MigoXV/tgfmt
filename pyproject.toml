@@ -1,18 +1,31 @@
-[tool.poetry]
+[project]
 name = "tgfmt"
-version = "1.6.0"
-description = "Praat TextGrid manipulation."
-authors = ["Kyle Gorman <kylebgorman@gmail.com>"]
-license = "MIT"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "migo",email = "1695587905@qq.com"}
+]
 readme = "README.md"
-packages = [{ include = "tgfmt", from = "src" }]
+requires-python = ">=3.10"
+dependencies = [
+    "opencv-python (>=4.12.0.88,<5.0.0.0)",
+    "librosa (>=0.11.0,<0.12.0)",
+    "soundfile (>=0.13.1,<0.14.0)",
+    "numpy (<2.3)",
+    "tqdm (>=4.67.1,<5.0.0)",
+    "typer (>=0.20.0,<0.21.0)",
+    "scipy (>=1.10.0,<2.0.0)",
+    "pillow (>=10.0.0,<11.0.0)"
+]
 
-[tool.poetry.dependencies]
-python = ">=3.8,<4.0"
+[tool.poetry]
+packages = [{include = "tgfmt", from = "src"}]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.0"
+[[tool.poetry.source]]
+name = "tuna"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+priority = "primary"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
